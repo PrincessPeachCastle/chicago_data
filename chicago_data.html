@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chicago Data WDC</title>
+    <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
+    <script type="text/javascript">
+        (function() {
+            var myConnector = tableau.makeConnector();
+
+            myConnector.getSchema = function(schemaCallback) {
+                var cols = [
+                    { id: "id", dataType: tableau.dataTypeEnum.string },
+                    { id: "inspection_date", dataType: tableau.dataTypeEnum.string },
+                    { id: "dba_name", dataType: tableau.dataTypeEnum.string },
+                    { id: "aka_name", dataType: tableau.dataTypeEnum.string },
+                    { id: "license_", dataType: tableau.dataTypeEnum.string },
+                    { id: "facility_type", dataType: tableau.dataTypeEnum.string },
+                    { id: "risk", dataType: tableau.dataTypeEnum.string },
+                    { id: "address", dataType: tableau.dataTypeEnum.string },
+                    { id: "city", dataType: tableau.dataTypeEnum.string },
+                    { id: "state", dataType: tableau.dataTypeEnum.string },
+                    { id: "zip", dataType: tableau.dataTypeEnum.string },
+                    { id: "inspection_type", dataType: tableau.dataTypeEnum.string },
+                    { id: "results", dataType: tableau.dataTypeEnum.string },
+                    { id: "latitude", dataType: tableau.dataTypeEnum.float },
+                    { id: "longitude", dataType: tableau.dataTypeEnum.float }
+                ];
+
+                var tableSchema = {
+                    id: "chicagoData",
+                    alias: "Chicago Inspections Data",
+                    columns: cols
+                };
+
+                schemaCallback([tableSchema]);
+            };
+
+            myConnector.getData = function(table, doneCallback) {
+                var apiURL = "https://data.cityofchicago.org/resource/gumc-mgzr.json";
+
+                $.getJSON(apiURL, function(resp) {
+                    var tableData = [];
+
+                    for (var i = 0, len = resp.length; i < len; i++) {
+                        tableData.push({
+                            "id": resp[i].inspection_id,
+                            "inspection_date": resp[i].inspection_date,
+                            "dba_name": resp[i].dba_name,
+                            "aka_name": resp[i].aka_name,
+                            "license_": resp[i].license_,
+                            "facility_type": resp[i].facility_type,
+                            "risk": resp[i].risk,
+                            "address": resp[i].address,
+                            "city": resp[i].city,
+                            "state": resp[i].state,
+                            "zip": resp[i].zip,
+                            "inspection_type": resp[i].inspection_type,
+                            "results": resp[i].results,
+                            "latitude": parseFloat(resp[i].location.coordinates[1]),
+                            "longitude": parseFloat(resp[i].location.coordinates[0])
+                        });
+                    }
+
+                    table.appendRows(tableData);
+                    doneCallback();
+                });
+            };
+
+            tableau.registerConnector(myConnector);
+        })();
+
+        $(document).ready(function() {
+            $("#submitButton").click(function() {
+                tableau.connectionName = "Chicago Inspections Data";
+                tableau.submit();
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Connect to Chicago Data</h1>
+    <button id="submitButton">Get Data!</button>
+</body>
+</html>
